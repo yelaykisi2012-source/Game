@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON RUNNER</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- O'yin oynasi -->
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Yuqori qismdagi ma'lumotlar (HUD) -->
+        <div id="hud" class="hidden">
+            <div class="hud-item">SCORE: <span id="scoreText">0</span></div>
+            <div class="hud-item">HI-SCORE: <span id="hiScoreText">0</span></div>
+            <div class="hud-item coin-text">🪙 <span id="coinText">0</span> &nbsp;|&nbsp; HAMYON: <span id="hudWallet">0</span></div>
+            <div class="hud-item season-info">FASL: <span id="seasonText">BAHOR</span></div>
+            <button id="pauseBtn" class="pause-btn">⏸</button>
+        </div>
+
+        <!-- BOSS FIGHT WARNING & TIMER BANNER -->
+        <div id="bossBanner" class="hidden">
+            <div class="boss-warning-text">⚠️ O'TILGAN BOSS PAYDO BO'LDI! 🐉</div>
+            <div class="boss-timer-bar"><div id="bossTimerFill"></div></div>
+        </div>
+
+        <!-- Pauza oynasi -->
+        <div id="pauseScreen" class="screen hidden">
+            <h1 class="neon-title">PAUSED</h1>
+            <p style="margin-bottom:25px; font-size:11px; color:#aaa;">O'yin to'xtatildi</p>
+            <div class="menu-buttons" style="width:100%; max-width:300px;">
+                <button id="resumeBtn" class="neon-btn btn-green">▶ DAVOM ET</button>
+                <button id="pauseSettingsBtn" class="neon-btn btn-magenta">⚙️ SOZLAMALAR</button>
+                <button id="exitToMenuBtn" class="neon-btn btn-red">🚪 CHIQISH</button>
+            </div>
+        </div>
+
+        <!-- Intro animasiyasi -->
+        <div id="introOverlay" class="screen hidden" style="background: black; z-index: 1000; padding: 0;">
+            <canvas id="introCanvas" style="width:100%; height:100%; object-fit:cover;"></canvas>
+            <button id="skipIntroBtn" class="neon-btn btn-cyan hidden" style="position: absolute; bottom: 20px; right: 20px; font-size: 8px; padding: 8px 12px; z-index: 1001; width:auto;">SKIP >></button>
+        </div>
+
+        <!-- Asosiy Menyu -->
+        <div id="startScreen" class="screen hidden">
+            <h1 class="neon-title">NEON RUNNER</h1>
+            <p style="font-size:10px; color:#aaa; margin-bottom:30px;">To'siqlardan sakrab o'ting, tangalarni yig'ing!</p>
+            <div class="menu-buttons">
+                <button id="playBtn" class="neon-btn btn-green">▶ O'YINNI BOSHLASH</button>
+                <button id="shopBtn" class="neon-btn btn-gold">🛒 DO'KON & DUNYOLAR</button>
+                <button id="settingsBtn" class="neon-btn btn-magenta">⚙️ SOZLAMALAR</button>
+            </div>
+            <p class="controls-hint" style="font-size:9px; color:#0ff; margin-top:25px; text-shadow:0 0 8px #0ff;">Space / ↑ — Sakrash &nbsp;|&nbsp; P — To'xtatish</p>
+            <div id="walletDisplay" style="margin-top:15px; font-size:11px; color:#ff0; text-shadow: 0 0 10px rgba(255,255,0,0.5);">
+                🪙 HAMYON: <span id="walletText">0</span>
+            </div>
+        </div>
+
+        <!-- SOZLAMALAR ekrani -->
+        <div id="settingsScreen" class="screen hidden">
+            <h1 class="neon-title" style="font-size:22px; margin-bottom:25px;">⚙️ SOZLAMALAR</h1>
+            <div class="settings-list">
+                <div class="settings-row">
+                    <span class="settings-label">🎵 MUSIQA</span>
+                    <button id="musicToggle" class="toggle-btn on">ON</button>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">🎵 MUSIQA OVOZI</span>
+                    <input type="range" id="musicVolume" class="settings-slider" min="0" max="100" value="40">
+                    <span id="musicVolVal" class="settings-val">40%</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">🔊 SFX EFFEKTLAR</span>
+                    <button id="sfxToggle" class="toggle-btn on">ON</button>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">🔊 SFX OVOZI</span>
+                    <input type="range" id="sfxVolume" class="settings-slider" min="0" max="100" value="80">
+                    <span id="sfxVolVal" class="settings-val">80%</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">🖥️ TO'LIQ EKRAN</span>
+                    <button id="fullscreenBtn" class="toggle-btn">OFF</button>
+                </div>
+            </div>
+            <button id="settingsCloseBtn" class="neon-btn btn-magenta" style="margin-top:30px; width:auto; padding:12px 30px;">← ORQAGA</button>
+        </div>
+
+        <!-- DO'KON ekrani -->
+        <div id="shopScreen" class="screen hidden" style="overflow-y:auto; padding:25px 15px;">
+            <h1 class="neon-title" style="font-size:22px; margin-bottom:5px;">🛒 DO'KON & MAJOZLAR</h1>
+            <p style="font-size:10px; color:#ff0; margin-bottom:15px;">🪙 Hamyon: <span id="shopWalletText">0</span></p>
+
+            <!-- Do'kon Tablari -->
+            <div style="display:flex; gap:8px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
+                <button id="shopTabChars" class="neon-btn btn-gold" style="font-size:8px; padding:8px 12px; width:auto;">👤 PERSONAJLAR</button>
+                <button id="shopTabEffects" class="neon-btn btn-cyan" style="font-size:8px; padding:8px 12px; width:auto;">✨ EFFEKTLAR</button>
+                <button id="shopTabPets" class="neon-btn btn-green" style="font-size:8px; padding:8px 12px; width:auto;">🐾 HAMROHLAR</button>
+                <button id="shopTabWorlds" class="neon-btn btn-magenta" style="font-size:8px; padding:8px 12px; width:auto;">🌍 DUNYOLAR</button>
+            </div>
+
+            <!-- Maxsus Effekt Rasm Yuklash Kutubxonasi -->
+            <div id="customEffectBox" class="hidden" style="margin-bottom:15px;">
+                <input type="file" id="customEffectFileInput" accept="image/*" style="display:none;">
+                <button id="uploadEffectBtn" class="neon-btn btn-magenta" style="font-size:9px; padding:10px 18px; width:auto; margin:0 auto; display:flex; align-items:center; gap:8px;">
+                    📁 O'Z RASMINGIZNI YUKLASH (MAXSUS EFFEKT)
+                </button>
+            </div>
+
+            <!-- Personajlar panjarasi -->
+            <div class="char-grid" id="charGrid">
+                <!-- Personajlar JS tomonidan yaratiladi -->
+            </div>
+
+            <!-- Effektlar panjarasi -->
+            <div class="char-grid hidden" id="effectGrid">
+                <!-- Effektlar JS tomonidan yaratiladi -->
+            </div>
+
+            <!-- Hamrohlar (Pets) panjarasi -->
+            <div class="char-grid hidden" id="petGrid">
+                <!-- Hamrohlar JS tomonidan yaratiladi -->
+            </div>
+
+            <!-- Dunyolar (Worlds) panjarasi -->
+            <div class="char-grid hidden" id="worldGrid">
+                <!-- Dunyolar JS tomonidan yaratiladi -->
+            </div>
+
+            <button id="shopCloseBtn" class="neon-btn btn-gold" style="margin-top:20px; width:auto; padding:12px 30px;">← ORQAGA</button>
+        </div>
+
+        <!-- Yutqazish oynasi -->
+        <div id="gameOverScreen" class="screen hidden">
+            <h1 class="neon-title text-red">GAME OVER</h1>
+            <div class="stats">
+                <p>SCORE: <span id="finalScore">0</span></p>
+                <p>🪙 TANGALAR: <span id="finalCoins">0</span></p>
+                <p style="font-size:10px; color:#ff0;">HAMYON: <span id="finalWallet">0</span></p>
+            </div>
+            <div class="menu-buttons" style="flex-direction:row; flex-wrap:wrap; justify-content:center; max-width:480px;">
+                <button id="restartBtn" class="neon-btn btn-green" style="width:auto;">↺ QAYTA</button>
+                <button id="goShopBtn" class="neon-btn btn-gold" style="width:auto;">🛒 DO'KON</button>
+                <button id="gameOverExitBtn" class="neon-btn btn-red" style="width:auto;">🚪 CHIQISH</button>
+            </div>
+        </div>
+
+        <!-- O'YIN ICHIDAGI SO'ROV VA OGOHLANTIRISH PLAYBOX (CUSTOM MODAL) -->
+        <div id="gameModal" class="screen hidden" style="z-index: 2000; background: rgba(0,0,0,0.85);">
+            <div class="modal-box">
+                <div id="modalIcon" style="font-size:36px; margin-bottom:10px;">⚠️</div>
+                <h3 id="modalTitle" class="neon-title" style="font-size:14px; margin-bottom:12px;">OGOHLANTIRISH</h3>
+                <p id="modalMessage" style="font-size:10px; color:#fff; line-height:1.6; margin-bottom:20px; text-shadow:1px 1px 0 #000;"></p>
+                <div id="modalButtons" style="display:flex; gap:12px; justify-content:center; width:100%;">
+                    <button id="modalOkBtn" class="neon-btn btn-green" style="font-size:9px; padding:10px 18px; width:auto;">TUSHUNDIM</button>
+                    <button id="modalCancelBtn" class="neon-btn btn-red" style="font-size:9px; padding:10px 18px; width:auto;">BEKOR QILISH</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <script src="intro.js"></script>
+</body>
+</html>
